@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copy Trade Control Center</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e4e4e4;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 212, 107, 0.15);
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .status-badge.online { color: #00d46b; }
+        .status-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00d46b;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Master Card */
+        .master-card {
+            background: linear-gradient(135deg, rgba(123, 44, 191, 0.2) 0%, rgba(0, 212, 255, 0.1) 100%);
+            border: 1px solid rgba(123, 44, 191, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .master-card h2 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 16px;
+        }
+
+        .master-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        /* Totals Row */
+        .totals-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .total-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .total-card .label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .total-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        .total-card .value.positive { color: #00d46b; }
+        .total-card .value.negative { color: #ff4757; }
+
+        /* Accounts Table */
+        .accounts-section {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .refresh-info {
+            font-size: 12px;
+            color: #888;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 16px 24px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        td {
+            padding: 16px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .account-name {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .account-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7b2cbf 0%, #00d4ff 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .account-info .name {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .account-info .account-number {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-pill.connected {
+            background: rgba(0, 212, 107, 0.15);
+            color: #00d46b;
+        }
+
+        .status-pill.disconnected {
+            background: rgba(255, 71, 87, 0.15);
+            color: #ff4757;
+        }
+
+        .status-pill.pending {
+            background: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+        }
+
+        .status-pill .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .equity-value {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .positions-badge {
+            background: rgba(0, 212, 255, 0.15);
+            color: #00d4ff;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .profit {
+            font-weight: 600;
+        }
+
+        .profit.positive { color: #00d46b; }
+        .profit.negative { color: #ff4757; }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+
+            th, td {
+                padding: 12px 16px;
+            }
+
+            .totals-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Copy Trade Control Center</h1>
+            <div class="status-badge online">
+                <span class="dot"></span>
+                <span id="server-status">Conectado</span>
+            </div>
+        </header>
+
+        <!-- Master Card -->
+        <div class="master-card">
+            <h2>Master Account</h2>
+            <div class="master-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="master-equity">-</div>
+                    <div class="stat-label">Equity</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="master-balance">-</div>
+                    <div class="stat-label">Balance</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="master-positions">-</div>
+                    <div class="stat-label">Positions</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="master-signal">-</div>
+                    <div class="stat-label">Last Signal</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Totals Row -->
+        <div class="totals-row">
+            <div class="total-card">
+                <div class="label">Contas Conectadas</div>
+                <div class="value" id="total-connected">0 / 0</div>
+            </div>
+            <div class="total-card">
+                <div class="label">Lucro Hoje</div>
+                <div class="value positive" id="total-today">$0.00</div>
+            </div>
+            <div class="total-card">
+                <div class="label">Lucro Semana</div>
+                <div class="value positive" id="total-week">$0.00</div>
+            </div>
+            <div class="total-card">
+                <div class="label">Lucro Mes</div>
+                <div class="value positive" id="total-month">$0.00</div>
+            </div>
+            <div class="total-card">
+                <div class="label">Lucro Total</div>
+                <div class="value positive" id="total-all">$0.00</div>
+            </div>
+        </div>
+
+        <!-- Accounts Table -->
+        <div class="accounts-section">
+            <div class="section-header">
+                <h3>Slave Accounts</h3>
+                <span class="refresh-info">Auto-refresh: 2s</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Conta</th>
+                        <th>Status</th>
+                        <th>Equity</th>
+                        <th>Positions</th>
+                        <th>Hoje</th>
+                        <th>Semana</th>
+                        <th>Mes</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="accounts-body">
+                    <tr>
+                        <td colspan="8">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Format currency
+        function formatCurrency(value) {
+            const num = parseFloat(value) || 0;
+            const prefix = num >= 0 ? '+' : '';
+            return prefix + '$' + Math.abs(num).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // Format equity (no sign)
+        function formatEquity(value) {
+            const num = parseFloat(value) || 0;
+            return '$' + num.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // Get profit class
+        function getProfitClass(value) {
+            const num = parseFloat(value) || 0;
+            return num >= 0 ? 'positive' : 'negative';
+        }
+
+        // Get initials
+        function getInitials(name) {
+            return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+        }
+
+        // Update dashboard
+        async function updateDashboard() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+
+                // Update master
+                const master = data.master || {};
+                document.getElementById('master-equity').textContent = formatEquity(master.equity);
+                document.getElementById('master-balance').textContent = formatEquity(master.balance);
+                document.getElementById('master-positions').textContent = master.positions || 0;
+                document.getElementById('master-signal').textContent = master.last_signal || '-';
+
+                // Update totals
+                const totals = data.totals || {};
+                document.getElementById('total-connected').textContent = 
+                    `${totals.connected || 0} / ${totals.total_accounts || 0}`;
+                
+                const todayEl = document.getElementById('total-today');
+                todayEl.textContent = formatCurrency(totals.today);
+                todayEl.className = 'value ' + getProfitClass(totals.today);
+
+                const weekEl = document.getElementById('total-week');
+                weekEl.textContent = formatCurrency(totals.week);
+                weekEl.className = 'value ' + getProfitClass(totals.week);
+
+                const monthEl = document.getElementById('total-month');
+                monthEl.textContent = formatCurrency(totals.month);
+                monthEl.className = 'value ' + getProfitClass(totals.month);
+
+                const totalEl = document.getElementById('total-all');
+                totalEl.textContent = formatCurrency(totals.total);
+                totalEl.className = 'value ' + getProfitClass(totals.total);
+
+                // Update accounts table
+                const accounts = data.accounts || [];
+                const tbody = document.getElementById('accounts-body');
+
+                if (accounts.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <path d="M12 6v6l4 2"></path>
+                                    </svg>
+                                    <p>Nenhuma conta conectada</p>
+                                    <p style="font-size: 12px; margin-top: 8px;">
+                                        Configure o SlaveTrader.mq5 para conectar
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = accounts.map(acc => {
+                    const stats = acc.stats || {};
+                    const today = stats.today?.profit || 0;
+                    const week = stats.week?.profit || 0;
+                    const month = stats.month?.profit || 0;
+                    const total = stats.total?.profit || 0;
+
+                    const statusClass = acc.is_connected ? 'connected' : 'disconnected';
+                    const statusText = acc.is_connected ? 'Online' : 'Offline';
+
+                    return `
+                        <tr>
+                            <td>
+                                <div class="account-name">
+                                    <div class="account-avatar">${getInitials(acc.name)}</div>
+                                    <div class="account-info">
+                                        <div class="name">${acc.name}</div>
+                                        <div class="account-number">#${acc.account_number || '-'}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-pill ${statusClass}">
+                                    <span class="status-dot"></span>
+                                    ${statusText}
+                                </span>
+                            </td>
+                            <td class="equity-value">${formatEquity(acc.equity)}</td>
+                            <td><span class="positions-badge">${acc.positions_count || 0}</span></td>
+                            <td class="profit ${getProfitClass(today)}">${formatCurrency(today)}</td>
+                            <td class="profit ${getProfitClass(week)}">${formatCurrency(week)}</td>
+                            <td class="profit ${getProfitClass(month)}">${formatCurrency(month)}</td>
+                            <td class="profit ${getProfitClass(total)}">${formatCurrency(total)}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('server-status').textContent = 'Erro de conexao';
+            }
+        }
+
+        // Initial load
+        updateDashboard();
+
+        // Auto-refresh every 2 seconds
+        setInterval(updateDashboard, 2000);
+    </script>
+</body>
+</html>
