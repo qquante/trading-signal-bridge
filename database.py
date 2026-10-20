@@ -13,9 +13,7 @@ import uuid as uuid_lib
 
 DATABASE_FILE = "trades.db"
 
-# ====================================================
 # INICIALIZAÇÃO DO BANCO
-# ====================================================
 def init_database():
     """Cria todas as tabelas necessárias"""
     conn = sqlite3.connect(DATABASE_FILE)
@@ -149,9 +147,7 @@ def get_db():
         conn.close()
 
 
-# ====================================================
 # ACCOUNTS (Contas dos Slaves)
-# ====================================================
 def upsert_account(name: str, account_number: int = None, broker: str = "Default") -> int:
     """Cria ou atualiza uma conta"""
     with get_db() as conn:
@@ -224,9 +220,7 @@ def get_account_by_name(name: str) -> Optional[Dict]:
         return dict(row) if row else None
 
 
-# ====================================================
 # SIGNALS (Sinais do Master)
-# ====================================================
 def create_signal(master_ticket: int, action: str, symbol: str, side: str = None,
                   order_type: str = None, volume: float = 0, price: float = 0,
                   sl: float = 0, tp: float = 0) -> str:
@@ -252,9 +246,7 @@ def get_signal_by_uuid(uuid: str) -> Optional[Dict]:
         return dict(row) if row else None
 
 
-# ====================================================
 # TRADES (Execuções nos Slaves)
-# ====================================================
 def create_trade(account_id: int, signal_uuid: str, master_ticket: int, action: str,
                  symbol: str = None, side: str = None, volume: float = 0, price: float = 0) -> int:
     """Registra um trade pendente"""
@@ -317,9 +309,7 @@ def get_recent_trades(limit: int = 50) -> List[Dict]:
         return [dict(row) for row in rows]
 
 
-# ====================================================
 # DAILY STATS (Estatísticas Diárias)
-# ====================================================
 def update_daily_stats(account_id: int, profit: float = 0, equity: float = 0, is_trade: bool = False, is_win: bool = False):
     """Atualiza estatísticas diárias"""
     today = datetime.now().strftime('%Y-%m-%d')
@@ -444,9 +434,7 @@ def get_all_stats() -> Dict:
     return result
 
 
-# ====================================================
 # UTILIDADES
-# ====================================================
 def check_duplicate_signal(account_name: str, master_ticket: int, action: str) -> bool:
     """Verifica se já existe um sinal igual confirmado para esta conta"""
     account = get_account_by_name(account_name)
@@ -479,9 +467,7 @@ def cleanup_old_data(days: int = 90):
         print(f"🗑️ Dados anteriores a {cutoff[:10]} removidos")
 
 
-# ====================================================
 # MASTER STATE (Posições e Ordens do Master)
-# ====================================================
 def update_master_positions(positions: List[Dict]):
     """Atualiza posições do master (substitui todas)"""
     with get_db() as conn:

@@ -1,24 +1,17 @@
-//+------------------------------------------------------------------+
-//|                                           CopyTradeDetector.mq5 |
 //|                                    Copy Trade Detection System  |
 //|                                    Detects trades on GOLD (XAU) |
-//+------------------------------------------------------------------+
 #property copyright "CopyTrade System"
 #property version   "2.00"
 #property description "Detects trades on GOLD - Webhook only, no logs"
 #property strict
 
-//--- Input parameters
 input string   InpSymbolFilter = "Gold";       // Symbol filter (Gold, XAU, etc)
 input string   InpWebhookURL   = "http://127.0.0.1:8000/trade";  // Webhook URL
 
-//--- Global variables
 ulong    lastDealTicket = 0;
 ulong    lastOrderTicket = 0;
 
-//+------------------------------------------------------------------+
 //| Check if symbol matches filter (case-insensitive)                  |
-//+------------------------------------------------------------------+
 bool MatchesSymbolFilter(string symbol)
 {
    if(InpSymbolFilter == "")
@@ -32,26 +25,18 @@ bool MatchesSymbolFilter(string symbol)
    return (StringFind(symbolLower, filterLower) >= 0);
 }
 
-//+------------------------------------------------------------------+
-//| Expert initialization function                                     |
-//+------------------------------------------------------------------+
 int OnInit()
 {
    Comment("CopyTrade Detector ACTIVE\nMonitoring: ", InpSymbolFilter);
    return(INIT_SUCCEEDED);
 }
 
-//+------------------------------------------------------------------+
-//| Expert deinitialization function                                   |
-//+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
    Comment("");
 }
 
-//+------------------------------------------------------------------+
 //| SINGLE WEBHOOK FUNCTION - Sends ALL events                        |
-//+------------------------------------------------------------------+
 void SendWebhook(string symbol, string action, string orderType, string side,
                  double volume, double price, ulong ticket, double sl, double tp)
 {
@@ -93,9 +78,7 @@ void SendWebhook(string symbol, string action, string orderType, string side,
    WebRequest("POST", InpWebhookURL, headers, timeout, postData, result, resultHeaders);
 }
 
-//+------------------------------------------------------------------+
 //| TradeTransaction function - Called on EVERY trade event           |
-//+------------------------------------------------------------------+
 void OnTradeTransaction(const MqlTradeTransaction& trans,
                         const MqlTradeRequest& request,
                         const MqlTradeResult& result)
@@ -237,9 +220,7 @@ void OnTradeTransaction(const MqlTradeTransaction& trans,
    }
 }
 
-//+------------------------------------------------------------------+
 //| Get order type name                                                |
-//+------------------------------------------------------------------+
 string GetOrderTypeName(ENUM_ORDER_TYPE orderType)
 {
    switch(orderType)
@@ -254,11 +235,8 @@ string GetOrderTypeName(ENUM_ORDER_TYPE orderType)
    }
 }
 
-//+------------------------------------------------------------------+
 //| Tick function                                                      |
-//+------------------------------------------------------------------+
 void OnTick()
 {
    // Not needed
 }
-//+------------------------------------------------------------------+

@@ -1,16 +1,11 @@
-//+------------------------------------------------------------------+
-//|                                                    SniperGold.mq5 |
 //|                                     CARTEL Sniper Gold System      |
 //|                              Copy Trade + Dashboard Profissional   |
-//+------------------------------------------------------------------+
 #property copyright "CARTEL Trading System"
 #property version   "2.20"
 #property description "Copy Trade com Dashboard Profissional"
 #property strict
 
-//+------------------------------------------------------------------+
 //| INPUTS - Configurações                                            |
-//+------------------------------------------------------------------+
 input group "=== WEBHOOK ==="
 input string   InpSymbolFilter = "XAU";                              // Filtro de Símbolo
 input string   InpWebhookURL   = "http://127.0.0.1:8000/trade";      // URL do Webhook
@@ -36,9 +31,7 @@ input color    InpColorProfit  = clrLime;                            // Cor de L
 input color    InpColorLoss    = clrRed;                             // Cor de Perda
 input color    InpColorNeutral = clrGold;                            // Cor Neutra
 
-//+------------------------------------------------------------------+
 //| VARIÁVEIS GLOBAIS                                                 |
-//+------------------------------------------------------------------+
 // Webhook
 ulong    lastDealTicket = 0;
 ulong    lastOrderTicket = 0;
@@ -74,9 +67,6 @@ struct GridCycle {
    double   profit;      // Lucro do ciclo
 };
 
-//+------------------------------------------------------------------+
-//| Expert initialization function                                     |
-//+------------------------------------------------------------------+
 int OnInit()
 {
    // Inicializa MA
@@ -99,9 +89,6 @@ int OnInit()
    return(INIT_SUCCEEDED);
 }
 
-//+------------------------------------------------------------------+
-//| Expert deinitialization function                                   |
-//+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
    ObjectsDeleteAll(0, PREFIX);
@@ -113,9 +100,7 @@ void OnDeinit(const int reason)
    Comment("");
 }
 
-//+------------------------------------------------------------------+
 //| Timer function - Atualiza painel + Sync                            |
-//+------------------------------------------------------------------+
 void OnTimer()
 {
    UpdatePanel();
@@ -130,9 +115,7 @@ void OnTimer()
    }
 }
 
-//+------------------------------------------------------------------+
 //| Tick function                                                      |
-//+------------------------------------------------------------------+
 void OnTick()
 {
    // Atualiza Drawdown
@@ -151,9 +134,7 @@ void OnTick()
       g_maxDrawdown = g_currentDrawdown;
 }
 
-//+------------------------------------------------------------------+
 //| OBTER BALANCE INICIAL DA CONTA                                    |
-//+------------------------------------------------------------------+
 double GetAccountStartBalance()
 {
    // Busca o primeiro depósito no histórico
@@ -187,9 +168,7 @@ double GetAccountStartBalance()
    return firstDeposit > 0 ? firstDeposit : AccountInfoDouble(ACCOUNT_BALANCE);
 }
 
-//+------------------------------------------------------------------+
 //| OBTER LUCRO REALIZADO HOJE (deals fechados)                       |
-//+------------------------------------------------------------------+
 double GetTodayRealizedProfit()
 {
    datetime todayStart = iTime(_Symbol, PERIOD_D1, 0);
@@ -226,9 +205,7 @@ double GetTodayRealizedProfit()
    return profit;
 }
 
-//+------------------------------------------------------------------+
 //| OBTER LUCRO TOTAL DA CONTA (desde o início)                       |
-//+------------------------------------------------------------------+
 double GetTotalAccountProfit()
 {
    double currentBalance = AccountInfoDouble(ACCOUNT_BALANCE);
@@ -241,9 +218,7 @@ double GetTotalAccountProfit()
    return totalEquity - deposits;
 }
 
-//+------------------------------------------------------------------+
 //| OBTER TOTAL DE DEPÓSITOS                                          |
-//+------------------------------------------------------------------+
 double GetTotalDeposits()
 {
    datetime startTime = 0;
@@ -276,9 +251,7 @@ double GetTotalDeposits()
    return deposits - withdrawals;
 }
 
-//+------------------------------------------------------------------+
 //| CONTAR DEALS DE HOJE                                              |
-//+------------------------------------------------------------------+
 int GetTodayDealsCount()
 {
    datetime todayStart = iTime(_Symbol, PERIOD_D1, 0);
@@ -310,7 +283,6 @@ int GetTodayDealsCount()
    return count;
 }
 
-//+------------------------------------------------------------------+
 //| OBTER ESTATÍSTICAS DOS GRIDS HOJE (LÓGICA CORRETA)               |
 //| G1 = Ciclo fechou com 1 posição                                   |
 //| G2 = Ciclo fechou com 2 posições                                  |
@@ -318,7 +290,6 @@ int GetTodayDealsCount()
 //| G4 = Ciclo fechou com 4 posições                                  |
 //| G5 = Ciclo fechou com 5+ posições                                 |
 //| Se fechou em G3, NÃO conta para G1, G2 (só o nível máximo)       |
-//+------------------------------------------------------------------+
 void GetTodayGridStats(GridStats &g1, GridStats &g2, GridStats &g3, GridStats &g4, GridStats &g5)
 {
    // Inicializa
@@ -404,9 +375,7 @@ void GetTodayGridStats(GridStats &g1, GridStats &g2, GridStats &g3, GridStats &g
    }
 }
 
-//+------------------------------------------------------------------+
 //| CRIAR PAINEL                                                       |
-//+------------------------------------------------------------------+
 void CreatePanel()
 {
    int x = InpPanelX;
@@ -580,9 +549,7 @@ void CreatePanel()
    ChartRedraw();
 }
 
-//+------------------------------------------------------------------+
 //| ATUALIZAR PAINEL                                                   |
-//+------------------------------------------------------------------+
 void UpdatePanel()
 {
    // Status
@@ -644,9 +611,7 @@ void UpdatePanel()
    ChartRedraw();
 }
 
-//+------------------------------------------------------------------+
 //| ATUALIZAR INFO DE TREND                                           |
-//+------------------------------------------------------------------+
 void UpdateTrendInfo()
 {
    double maValue[];
@@ -680,9 +645,7 @@ void UpdateTrendInfo()
    }
 }
 
-//+------------------------------------------------------------------+
 //| ATUALIZAR ESTATÍSTICAS DOS GRIDS                                  |
-//+------------------------------------------------------------------+
 void UpdateGridStats()
 {
    // Deals hoje
@@ -719,9 +682,7 @@ void UpdateGridStats()
    ObjectSetInteger(0, PREFIX+"val_g5", OBJPROP_COLOR, g5.count == 0 ? clrGray : (g5.profit >= 0 ? InpColorProfit : InpColorLoss));
 }
 
-//+------------------------------------------------------------------+
 //| ATUALIZAR INFO DE POSIÇÕES                                        |
-//+------------------------------------------------------------------+
 void UpdatePositionsInfo()
 {
    int buyCount = 0, sellCount = 0;
@@ -821,9 +782,7 @@ void UpdatePositionsInfo()
    ObjectSetString(0, PREFIX+"val_nextsell", OBJPROP_TEXT, nextSellStr);
 }
 
-//+------------------------------------------------------------------+
 //| OBTER NÍVEL DO GRID PELO LOTE (para próximo grid)                 |
-//+------------------------------------------------------------------+
 int GetGridLevelFromLot(double lots)
 {
    if(lots <= 0) return 0;
@@ -843,9 +802,7 @@ int GetGridLevelFromLot(double lots)
    return 5;
 }
 
-//+------------------------------------------------------------------+
 //| OBTER FLOATING PNL                                                |
-//+------------------------------------------------------------------+
 double GetFloatingPnL()
 {
    double total = 0;
@@ -861,9 +818,7 @@ double GetFloatingPnL()
    return total;
 }
 
-//+------------------------------------------------------------------+
 //| FUNÇÕES DE CRIAÇÃO DE OBJETOS                                     |
-//+------------------------------------------------------------------+
 void CreateRectangle(string name, int x, int y, int width, int height, color bgColor, color borderColor)
 {
    ObjectCreate(0, name, OBJ_RECTANGLE_LABEL, 0, 0, 0);
@@ -924,9 +879,7 @@ void CreateButton(string name, int x, int y, int width, int height, string text,
    ObjectSetInteger(0, name, OBJPROP_SELECTABLE, false);
 }
 
-//+------------------------------------------------------------------+
 //| EVENTO DE CLIQUE EM OBJETO                                        |
-//+------------------------------------------------------------------+
 void OnChartEvent(const int id, const long& lparam, const double& dparam, const string& sparam)
 {
    if(id == CHARTEVENT_OBJECT_CLICK)
@@ -951,9 +904,7 @@ void OnChartEvent(const int id, const long& lparam, const double& dparam, const 
    }
 }
 
-//+------------------------------------------------------------------+
 //| FECHAR TODAS POSIÇÕES                                             |
-//+------------------------------------------------------------------+
 void CloseAllPositions()
 {
    for(int i = PositionsTotal() - 1; i >= 0; i--)
@@ -984,9 +935,7 @@ void CloseAllPositions()
    }
 }
 
-//+------------------------------------------------------------------+
 //| Check if symbol matches filter (case-insensitive)                  |
-//+------------------------------------------------------------------+
 bool MatchesSymbolFilter(string symbol)
 {
    if(InpSymbolFilter == "")
@@ -1000,9 +949,7 @@ bool MatchesSymbolFilter(string symbol)
    return (StringFind(symbolLower, filterLower) >= 0);
 }
 
-//+------------------------------------------------------------------+
 //| WEBHOOK - Envia sinal para servidor                                |
-//+------------------------------------------------------------------+
 void SendWebhook(string symbol, string action, string orderType, string side,
                  double volume, double price, ulong ticket, double sl, double tp)
 {
@@ -1051,9 +998,7 @@ void SendWebhook(string symbol, string action, string orderType, string side,
    }
 }
 
-//+------------------------------------------------------------------+
 //| SYNC - Envia estado atual de posições e ordens                     |
-//+------------------------------------------------------------------+
 void SendPositionSync()
 {
    if(g_isPaused)
@@ -1140,9 +1085,7 @@ void SendPositionSync()
    WebRequest("POST", syncURL, headers, timeout, postData, result, resultHeaders);
 }
 
-//+------------------------------------------------------------------+
 //| Busca o ORDER ticket original que abriu uma posição               |
-//+------------------------------------------------------------------+
 long FindOriginalOrderTicket(ulong positionId)
 {
    // Busca no histórico o deal de OPEN desta posição
@@ -1173,9 +1116,7 @@ long FindOriginalOrderTicket(ulong positionId)
    return 0;
 }
 
-//+------------------------------------------------------------------+
 //| TradeTransaction function - Detecta trades                         |
-//+------------------------------------------------------------------+
 void OnTradeTransaction(const MqlTradeTransaction& trans,
                         const MqlTradeRequest& request,
                         const MqlTradeResult& result)
@@ -1306,9 +1247,7 @@ void OnTradeTransaction(const MqlTradeTransaction& trans,
    }
 }
 
-//+------------------------------------------------------------------+
 //| Get order type name                                                |
-//+------------------------------------------------------------------+
 string GetOrderTypeName(ENUM_ORDER_TYPE orderType)
 {
    switch(orderType)
@@ -1322,4 +1261,3 @@ string GetOrderTypeName(ENUM_ORDER_TYPE orderType)
       default: return "UNKNOWN";
    }
 }
-//+------------------------------------------------------------------+

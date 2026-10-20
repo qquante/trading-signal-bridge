@@ -18,16 +18,12 @@ import os
 # Import database
 import database as db
 
-# ====================================================
 # CONFIGURAÇÃO
-# ====================================================
 HTTP_PORT = 8000        # Porta para receber webhooks do Master
 TCP_PORT = 9999         # Porta TCP para Slaves conectarem
 HOST = "0.0.0.0"        # Aceita conexões de qualquer IP
 
-# ====================================================
 # ESTADO GLOBAL
-# ====================================================
 # Mapeia writer -> info do slave
 connected_slaves: Dict[asyncio.StreamWriter, dict] = {}
 
@@ -43,9 +39,7 @@ master_status = {
     "last_update": None
 }
 
-# ====================================================
 # TCP SERVER - Conexões dos Slaves
-# ====================================================
 async def handle_slave(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
     """Gerencia conexão de um Slave com identificação"""
     addr = writer.get_extra_info('peername')
@@ -250,9 +244,7 @@ async def start_tcp_server():
     asyncio.create_task(server.serve_forever())
 
 
-# ====================================================
 # HTTP SERVER - Webhooks do Master + API
-# ====================================================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await start_tcp_server()
@@ -424,9 +416,7 @@ async def root():
     }
 
 
-# ====================================================
 # API ENDPOINTS para Dashboard
-# ====================================================
 @app.get("/api/accounts")
 async def get_accounts():
     """Retorna todas as contas com status"""
@@ -493,9 +483,7 @@ async def dashboard():
     return HTMLResponse(content="<h1>Dashboard não encontrado</h1><p>Crie o arquivo dashboard.html</p>")
 
 
-# ====================================================
 # MAIN
-# ====================================================
 if __name__ == "__main__":
     print("=" * 60)
     print("  COPY TRADE CONTROL CENTER")

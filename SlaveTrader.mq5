@@ -1,8 +1,5 @@
-//+------------------------------------------------------------------+
-//|                                                  SlaveTrader.mq5 |
 //|                                     CARTEL Sniper Gold System     |
 //|                              Copy Trade + Dashboard Profissional   |
-//+------------------------------------------------------------------+
 #property copyright "CARTEL Trading System"
 #property version   "2.20"
 #property description "Copy Trade com Dashboard Profissional"
@@ -10,9 +7,7 @@
 
 #include <Trade\Trade.mqh>
 
-//+------------------------------------------------------------------+
 //| INPUTS - Configurações                                            |
-//+------------------------------------------------------------------+
 input group "=== IDENTIFICAÇÃO ==="
 input string   InpAccountName  = "Slave1";                            // Nome desta conta (ex: Yoda, Alice)
 input string   InpBroker       = "Default";                           // Nome do Broker
@@ -47,9 +42,7 @@ input color    InpColorProfit  = clrLime;                             // Cor de 
 input color    InpColorLoss    = clrRed;                              // Cor de Perda
 input color    InpColorNeutral = clrGold;                             // Cor Neutra
 
-//+------------------------------------------------------------------+
 //| VARIÁVEIS GLOBAIS                                                 |
-//+------------------------------------------------------------------+
 // Socket
 int      g_socket = INVALID_HANDLE;
 bool     g_connected = false;
@@ -91,9 +84,7 @@ struct GridStats {
    double profit;
 };
 
-//+------------------------------------------------------------------+
 //| Expert initialization                                             |
-//+------------------------------------------------------------------+
 int OnInit()
 {
    // Configura trade
@@ -122,9 +113,7 @@ int OnInit()
    return(INIT_SUCCEEDED);
 }
 
-//+------------------------------------------------------------------+
 //| Expert deinitialization                                           |
-//+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
    ObjectsDeleteAll(0, PREFIX);
@@ -137,9 +126,7 @@ void OnDeinit(const int reason)
    Comment("");
 }
 
-//+------------------------------------------------------------------+
 //| Timer                                                             |
-//+------------------------------------------------------------------+
 void OnTimer()
 {
    // Conexão TCP - usa GetTickCount64 (sempre atualiza, mesmo sem ticks)
@@ -195,9 +182,7 @@ void OnTimer()
    }
 }
 
-//+------------------------------------------------------------------+
 //| OnTick                                                            |
-//+------------------------------------------------------------------+
 void OnTick()
 {
    double equity = AccountInfoDouble(ACCOUNT_EQUITY);
@@ -212,9 +197,7 @@ void OnTick()
       g_maxDrawdown = g_currentDrawdown;
 }
 
-//+------------------------------------------------------------------+
 //| CONECTAR AO SERVIDOR                                              |
-//+------------------------------------------------------------------+
 void ConnectToServer()
 {
    if(g_connected) return;
@@ -237,9 +220,7 @@ void ConnectToServer()
    SendIdentification();
 }
 
-//+------------------------------------------------------------------+
 //| ENVIAR IDENTIFICAÇÃO AO SERVIDOR                                  |
-//+------------------------------------------------------------------+
 void SendIdentification()
 {
    if(!g_connected || g_socket == INVALID_HANDLE) return;
@@ -262,9 +243,7 @@ void SendIdentification()
    }
 }
 
-//+------------------------------------------------------------------+
 //| ENVIAR STATUS PERIÓDICO AO SERVIDOR                               |
-//+------------------------------------------------------------------+
 void SendStatusReport()
 {
    if(!g_connected || !g_identified || g_socket == INVALID_HANDLE) return;
@@ -300,9 +279,7 @@ void SendStatusReport()
    SocketSend(g_socket, data, ArraySize(data));
 }
 
-//+------------------------------------------------------------------+
 //| ENVIAR CONFIRMAÇÃO DE TRADE                                       |
-//+------------------------------------------------------------------+
 void SendTradeConfirmation(string uuid, bool success, long slaveTicket, string errorMsg = "", double profit = 0)
 {
    if(!g_connected || !g_identified || g_socket == INVALID_HANDLE) return;
@@ -323,9 +300,7 @@ void SendTradeConfirmation(string uuid, bool success, long slaveTicket, string e
       Print("📤 Confirmação enviada: UUID=", uuid, " Success=", success);
 }
 
-//+------------------------------------------------------------------+
 //| CONTA POSIÇÕES ABERTAS                                            |
-//+------------------------------------------------------------------+
 int CountMyPositions()
 {
    int count = 0;
@@ -341,9 +316,7 @@ int CountMyPositions()
    return count;
 }
 
-//+------------------------------------------------------------------+
 //| DESCONECTAR                                                       |
-//+------------------------------------------------------------------+
 void DisconnectFromServer()
 {
    if(g_socket != INVALID_HANDLE)
@@ -358,9 +331,7 @@ void DisconnectFromServer()
    g_connected = false;
 }
 
-//+------------------------------------------------------------------+
 //| LER DADOS DO SOCKET                                               |
-//+------------------------------------------------------------------+
 void ReadSocketData()
 {
    if(!g_connected || g_socket == INVALID_HANDLE) return;
@@ -391,9 +362,7 @@ void ReadSocketData()
    }
 }
 
-//+------------------------------------------------------------------+
 //| PROCESSAR MENSAGEM                                                |
-//+------------------------------------------------------------------+
 void ProcessMessage(string json)
 {
    string type = GetJsonString(json, "type");
@@ -418,9 +387,7 @@ void ProcessMessage(string json)
       ProcessTradeSignal(json);
 }
 
-//+------------------------------------------------------------------+
 //| PROCESSAR SYNC - Sincroniza posições com o Master                 |
-//+------------------------------------------------------------------+
 void ProcessSyncMessage(string json)
 {
    // Arrays para armazenar posições do master
@@ -434,9 +401,7 @@ void ProcessSyncMessage(string json)
    string positionsStr = ExtractJsonArray(json, "positions");
    ParseMasterPositions(positionsStr, masterMagics, masterSides, masterVolumes, masterCount);
    
-   // ═══════════════════════════════════════════════════════════════════
    // PASSO 1: FECHAR ÓRFÃS E DUPLICADAS
-   // ═══════════════════════════════════════════════════════════════════
    
    // Array para rastrear quais magics já vimos (para detectar duplicatas)
    long seenMagics[];
@@ -498,9 +463,7 @@ void ProcessSyncMessage(string json)
       }
    }
    
-   // ═══════════════════════════════════════════════════════════════════
    // PASSO 2: ABRIR POSIÇÕES FALTANTES
-   // ═══════════════════════════════════════════════════════════════════
    
    for(int m = 0; m < masterCount; m++)
    {
@@ -541,9 +504,7 @@ void ProcessSyncMessage(string json)
    }
 }
 
-//+------------------------------------------------------------------+
 //| CONTA POSIÇÕES COM DETERMINADO MAGIC                              |
-//+------------------------------------------------------------------+
 int CountPositionsWithMagic(long magic)
 {
    int count = 0;
@@ -562,9 +523,7 @@ int CountPositionsWithMagic(long magic)
    return count;
 }
 
-//+------------------------------------------------------------------+
 //| VERIFICA SE EXISTE POSIÇÃO COM MAGIC (versão silenciosa)          |
-//+------------------------------------------------------------------+
 bool HasPositionWithMagicSilent(long magic)
 {
    for(int i = PositionsTotal() - 1; i >= 0; i--)
@@ -582,9 +541,7 @@ bool HasPositionWithMagicSilent(long magic)
    return false;
 }
 
-//+------------------------------------------------------------------+
 //| EXTRAI ARRAY JSON (retorna conteúdo entre [ ])                    |
-//+------------------------------------------------------------------+
 string ExtractJsonArray(string json, string key)
 {
    string search = "\"" + key + "\":[";
@@ -606,9 +563,7 @@ string ExtractJsonArray(string json, string key)
    return StringSubstr(json, start, end - start - 1);
 }
 
-//+------------------------------------------------------------------+
 //| PARSE DAS POSIÇÕES DO MASTER                                      |
-//+------------------------------------------------------------------+
 void ParseMasterPositions(string positionsJson, long &magics[], string &sides[], 
                           double &volumes[], int &count)
 {
@@ -656,9 +611,7 @@ void ParseMasterPositions(string positionsJson, long &magics[], string &sides[],
    ArrayResize(volumes, count);
 }
 
-//+------------------------------------------------------------------+
 //| LOCK ATÔMICO - Previne duplicação de ordens                       |
-//+------------------------------------------------------------------+
 bool TryProcessTicket(long ticket, string action)
 {
    // Nome único para este ticket+action
@@ -674,9 +627,7 @@ bool TryProcessTicket(long ticket, string action)
    return GlobalVariableSetOnCondition(lockName, 1, 0);
 }
 
-//+------------------------------------------------------------------+
 //| LIMPA LOCKS ANTIGOS - Evita acumular lixo                         |
-//+------------------------------------------------------------------+
 void CleanupOldLocks()
 {
    int total = GlobalVariablesTotal();
@@ -694,9 +645,7 @@ void CleanupOldLocks()
    }
 }
 
-//+------------------------------------------------------------------+
 //| PROCESSAR SINAL DE TRADE                                          |
-//+------------------------------------------------------------------+
 void ProcessTradeSignal(string json)
 {
    string symbol = GetJsonString(json, "symbol");
@@ -725,9 +674,7 @@ void ProcessTradeSignal(string json)
       return; 
    }
    
-   // ══════════════════════════════════════════════════════════════════
    // LOCK ATÔMICO - Se FALSE, significa que já está processando/processado
-   // ══════════════════════════════════════════════════════════════════
    if(!TryProcessTicket(masterTicket, action))
    {
       Print("⏭️ IGNORADO - Ticket ", masterTicket, " já processado para ", action);
@@ -858,9 +805,7 @@ void ProcessTradeSignal(string json)
    Print("═══════════════════════════════════════════════════════════");
 }
 
-//+------------------------------------------------------------------+
 //| FECHAR POSIÇÕES                                                   |
-//+------------------------------------------------------------------+
 void ClosePositions(string side)
 {
    for(int attempt = 0; attempt < 3; attempt++)
@@ -895,9 +840,7 @@ void ClosePositions(string side)
    }
 }
 
-//+------------------------------------------------------------------+
 //| VERIFICA SE EXISTE POSIÇÃO COM MAGIC (atômico)                    |
-//+------------------------------------------------------------------+
 bool HasPositionWithMagic(long magic)
 {
    Print("   🔍 Buscando posição magic=", magic, " (Total: ", PositionsTotal(), ")");
@@ -925,9 +868,7 @@ bool HasPositionWithMagic(long magic)
    return false;
 }
 
-//+------------------------------------------------------------------+
 //| VERIFICA SE EXISTE PENDING COM MAGIC                              |
-//+------------------------------------------------------------------+
 bool HasPendingWithMagic(long magic)
 {
    Print("   🔍 Buscando pending magic=", magic, " (Total: ", OrdersTotal(), ")");
@@ -954,9 +895,7 @@ bool HasPendingWithMagic(long magic)
    return false;
 }
 
-//+------------------------------------------------------------------+
 //| MODIFICA PENDING POR MAGIC                                        |
-//+------------------------------------------------------------------+
 bool ModifyPendingByMagic(long magic, double price)
 {
    for(int i = OrdersTotal() - 1; i >= 0; i--)
@@ -978,9 +917,7 @@ bool ModifyPendingByMagic(long magic, double price)
    return false;  // Não encontrou a ordem
 }
 
-//+------------------------------------------------------------------+
 //| CANCELA PENDING POR MAGIC                                         |
-//+------------------------------------------------------------------+
 void CancelPendingByMagic(long magic)
 {
    for(int i = OrdersTotal() - 1; i >= 0; i--)
@@ -999,9 +936,7 @@ void CancelPendingByMagic(long magic)
    }
 }
 
-//+------------------------------------------------------------------+
 //| FECHA POSIÇÃO POR MAGIC                                           |
-//+------------------------------------------------------------------+
 void ClosePositionByMagic(long magic)
 {
    int closed = 0;
@@ -1026,9 +961,7 @@ void ClosePositionByMagic(long magic)
    Print("📋 Magic ", magic, " adicionado à fila de retry (fechou ", closed, " posições)");
 }
 
-//+------------------------------------------------------------------+
 //| ADICIONA MAGIC À FILA DE FECHAMENTO PENDENTE                      |
-//+------------------------------------------------------------------+
 void AddPendingClose(long magic)
 {
    // Verifica se já está na fila
@@ -1044,9 +977,7 @@ void AddPendingClose(long magic)
    g_pendingCloses[g_pendingClosesCount - 1] = magic;
 }
 
-//+------------------------------------------------------------------+
 //| REMOVE MAGIC DA FILA DE FECHAMENTO PENDENTE                       |
-//+------------------------------------------------------------------+
 void RemovePendingClose(long magic)
 {
    for(int i = 0; i < g_pendingClosesCount; i++)
@@ -1064,9 +995,7 @@ void RemovePendingClose(long magic)
    }
 }
 
-//+------------------------------------------------------------------+
 //| VERIFICA SE EXISTE POSIÇÃO COM MAGIC                              |
-//+------------------------------------------------------------------+
 bool HasPositionWithMagicNumber(long magic)
 {
    for(int i = PositionsTotal() - 1; i >= 0; i--)
@@ -1084,9 +1013,7 @@ bool HasPositionWithMagicNumber(long magic)
    return false;
 }
 
-//+------------------------------------------------------------------+
 //| PROCESSA FECHAMENTOS PENDENTES (chamado a cada 1 seg)             |
-//+------------------------------------------------------------------+
 void ProcessPendingCloses()
 {
    if(g_pendingClosesCount == 0) return;
@@ -1126,9 +1053,7 @@ void ProcessPendingCloses()
    }
 }
 
-//+------------------------------------------------------------------+
 //| FECHAR TODAS AS POSIÇÕES                                          |
-//+------------------------------------------------------------------+
 void CloseAllPositions()
 {
    for(int i = PositionsTotal() - 1; i >= 0; i--)
@@ -1146,9 +1071,7 @@ void CloseAllPositions()
 }
 
 
-//+------------------------------------------------------------------+
 //| VERIFICA FILTRO DE SÍMBOLO                                        |
-//+------------------------------------------------------------------+
 bool MatchesSymbolFilter(string symbol)
 {
    if(InpSymbolFilter == "") return true;
@@ -1161,9 +1084,7 @@ bool MatchesSymbolFilter(string symbol)
    return (StringFind(symbolLower, filterLower) >= 0);
 }
 
-//+------------------------------------------------------------------+
 //| OBTER BALANCE INICIAL DA CONTA                                    |
-//+------------------------------------------------------------------+
 double GetAccountStartBalance()
 {
    datetime startTime = 0;
@@ -1196,9 +1117,7 @@ double GetAccountStartBalance()
    return firstDeposit > 0 ? firstDeposit : AccountInfoDouble(ACCOUNT_BALANCE);
 }
 
-//+------------------------------------------------------------------+
 //| OBTER LUCRO REALIZADO HOJE                                        |
-//+------------------------------------------------------------------+
 double GetTodayRealizedProfit()
 {
    datetime todayStart = iTime(_Symbol, PERIOD_D1, 0);
@@ -1231,9 +1150,7 @@ double GetTodayRealizedProfit()
    return profit;
 }
 
-//+------------------------------------------------------------------+
 //| OBTER LUCRO TOTAL DA CONTA                                        |
-//+------------------------------------------------------------------+
 double GetTotalAccountProfit()
 {
    double currentBalance = AccountInfoDouble(ACCOUNT_BALANCE);
@@ -1244,9 +1161,7 @@ double GetTotalAccountProfit()
    return totalEquity - deposits;
 }
 
-//+------------------------------------------------------------------+
 //| OBTER TOTAL DE DEPÓSITOS                                          |
-//+------------------------------------------------------------------+
 double GetTotalDeposits()
 {
    datetime startTime = 0;
@@ -1279,9 +1194,7 @@ double GetTotalDeposits()
    return deposits - withdrawals;
 }
 
-//+------------------------------------------------------------------+
 //| CONTAR DEALS DE HOJE                                              |
-//+------------------------------------------------------------------+
 int GetTodayDealsCount()
 {
    datetime todayStart = iTime(_Symbol, PERIOD_D1, 0);
@@ -1310,9 +1223,7 @@ int GetTodayDealsCount()
    return count;
 }
 
-//+------------------------------------------------------------------+
 //| OBTER ESTATÍSTICAS DOS GRIDS HOJE                                 |
-//+------------------------------------------------------------------+
 void GetTodayGridStats(GridStats &g1, GridStats &g2, GridStats &g3, GridStats &g4, GridStats &g5)
 {
    g1.count = 0; g1.profit = 0;
@@ -1387,9 +1298,7 @@ void GetTodayGridStats(GridStats &g1, GridStats &g2, GridStats &g3, GridStats &g
    }
 }
 
-//+------------------------------------------------------------------+
 //| OBTER FLOATING PNL                                                |
-//+------------------------------------------------------------------+
 double GetFloatingPnL()
 {
    double total = 0;
@@ -1405,9 +1314,7 @@ double GetFloatingPnL()
    return total;
 }
 
-//+------------------------------------------------------------------+
 //| CRIAR PAINEL - IDÊNTICO AO SNIPERGOLD                             |
-//+------------------------------------------------------------------+
 void CreatePanel()
 {
    int x = InpPanelX;
@@ -1570,9 +1477,7 @@ void CreatePanel()
    ChartRedraw();
 }
 
-//+------------------------------------------------------------------+
 //| ATUALIZAR PAINEL                                                   |
-//+------------------------------------------------------------------+
 void UpdatePanel()
 {
    // Status
@@ -1635,9 +1540,7 @@ void UpdatePanel()
    ChartRedraw();
 }
 
-//+------------------------------------------------------------------+
 //| ATUALIZAR INFO DE TREND                                           |
-//+------------------------------------------------------------------+
 void UpdateTrendInfo()
 {
    if(g_maHandle == INVALID_HANDLE) return;
@@ -1673,9 +1576,7 @@ void UpdateTrendInfo()
    }
 }
 
-//+------------------------------------------------------------------+
 //| ATUALIZAR ESTATÍSTICAS DOS GRIDS                                  |
-//+------------------------------------------------------------------+
 void UpdateGridStats()
 {
    int dealsCount = GetTodayDealsCount();
@@ -1705,9 +1606,7 @@ void UpdateGridStats()
    ObjectSetInteger(0, PREFIX+"val_g5", OBJPROP_COLOR, g5.count == 0 ? clrGray : (g5.profit >= 0 ? InpColorProfit : InpColorLoss));
 }
 
-//+------------------------------------------------------------------+
 //| ATUALIZAR INFO DE POSIÇÕES                                        |
-//+------------------------------------------------------------------+
 void UpdatePositionsInfo()
 {
    int buyCount = 0, sellCount = 0;
@@ -1798,9 +1697,7 @@ void UpdatePositionsInfo()
    ObjectSetString(0, PREFIX+"val_nextsell", OBJPROP_TEXT, nextSellStr);
 }
 
-//+------------------------------------------------------------------+
 //| FUNÇÕES DE CRIAÇÃO DE OBJETOS                                     |
-//+------------------------------------------------------------------+
 void CreateRectangle(string name, int x, int y, int width, int height, color bgColor, color borderColor)
 {
    ObjectCreate(0, name, OBJ_RECTANGLE_LABEL, 0, 0, 0);
@@ -1863,9 +1760,7 @@ void CreateButton(string name, int x, int y, int width, int height, string text,
    ObjectSetInteger(0, name, OBJPROP_SELECTABLE, false);
 }
 
-//+------------------------------------------------------------------+
 //| CHART EVENT - Botões                                              |
-//+------------------------------------------------------------------+
 void OnChartEvent(const int id, const long &lparam, const double &dparam, const string &sparam)
 {
    if(id == CHARTEVENT_OBJECT_CLICK)
@@ -1884,9 +1779,7 @@ void OnChartEvent(const int id, const long &lparam, const double &dparam, const 
    }
 }
 
-//+------------------------------------------------------------------+
 //| PARSE JSON - String                                               |
-//+------------------------------------------------------------------+
 string GetJsonString(string json, string key)
 {
    // Procura "key": ou "key" :
@@ -1939,9 +1832,7 @@ string GetJsonString(string json, string key)
    }
 }
 
-//+------------------------------------------------------------------+
 //| PARSE JSON - Double                                               |
-//+------------------------------------------------------------------+
 double GetJsonDouble(string json, string key)
 {
    string value = GetJsonString(json, key);
@@ -1950,9 +1841,7 @@ double GetJsonDouble(string json, string key)
    return StringToDouble(value);
 }
 
-//+------------------------------------------------------------------+
 //| PARSE JSON - Long                                                 |
-//+------------------------------------------------------------------+
 long GetJsonLong(string json, string key)
 {
    string value = GetJsonString(json, key);
@@ -1960,4 +1849,3 @@ long GetJsonLong(string json, string key)
    StringReplace(value, " ", "");
    return StringToInteger(value);
 }
-//+------------------------------------------------------------------+
